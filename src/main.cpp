@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <string.h>
+#include "ground_patterns.h"
 
 static constexpr int OLED_WIDTH = 128;
 static constexpr int OLED_HEIGHT = 64;
@@ -33,6 +35,49 @@ unsigned long score = 0;
 unsigned long lastScoreTickMs = 0;
 static constexpr unsigned long SCORE_TICK_MS = 1000;
 
+int trackPatternIndex = 0;
+int trackCharIndex = 0;
+
+static constexpr int TRACK_CHAR_PX = 6; // ширина символу шрифту розміру 1
+static constexpr int TRACK_VISIBLE_CHARS = OLED_WIDTH / TRACK_CHAR_PX;
+static constexpr int TRACK_Y = 48;
+static constexpr unsigned long TRACK_TICK_MS = 100;
+static constexpr int TRACK_STEP_PX = 2;
+
+char trackBuffer[TRACK_VISIBLE_CHARS + 1];
+int trackPixelOffset = 0;
+unsigned long lastTrackTickMs = 0;
+
+// Видає наступний символ треку, перебираючи патерни підряд по колу
+char nextTrackChar() {
+    const char* pattern = GROUND_PATTERNS[trackPatternIndex];
+    char c = pattern[trackCharIndex];
+    trackCharIndex++;
+    if (pattern[trackCharIndex] == '\0') {
+        trackCharIndex = 0;
+        trackPatternIndex = (trackPatternIndex + 1) % GROUND_PATTERNS_COUNT;
+    }
+    return c;
+}
+
+void initTrack() {
+    for (int i = 0; i < TRACK_VISIBLE_CHARS; i++) {
+        trackBuffer[i] = nextTrackChar();
+    }
+    trackBuffer[TRACK_VISIBLE_CHARS] = '\0';
+    trackPixelOffset = 0;
+}
+
+// Зсуває трек на TRACK_STEP_PX пікселів; коли назбирали цілий символ - скидаємо буфер на один символ вліво
+void advanceTrack() {
+    trackPixelOffset += TRACK_STEP_PX;
+    if (trackPixelOffset >= TRACK_CHAR_PX) {
+        trackPixelOffset -= TRACK_CHAR_PX;
+        memmove(trackBuffer, trackBuffer + 1, TRACK_VISIBLE_CHARS - 1);
+        trackBuffer[TRACK_VISIBLE_CHARS - 1] = nextTrackChar();
+    }
+}
+
 void renderStartScreen() {
     display.clearDisplay();
     display.setTextColor(SSD1306_WHITE);
@@ -58,6 +103,9 @@ void renderPlayingScreen() {
     display.getTextBounds(scoreText, 0, 0, &x1, &y1, &textWidth, &textHeight);
     display.setCursor(OLED_WIDTH - textWidth - 2, 0);
     display.println(scoreText);
+
+    display.setCursor(-trackPixelOffset, TRACK_Y);
+    display.print(trackBuffer);
 
     display.display();
 }
@@ -101,12 +149,28 @@ void loop() {
         gameState = GameState::PLAYING;
         score = 0;
         lastScoreTickMs = millis();
+        lastTrackTickMs = millis();
+        initTrack();
         renderPlayingScreen();
     }
 
-    if (gameState == GameState::PLAYING && millis() - lastScoreTickMs >= SCORE_TICK_MS) {
-        lastScoreTickMs += SCORE_TICK_MS;
-        score++;
-        renderPlayingScreen();
+    if (gameState == GameState::PLAYING) {
+        bool needsRedraw = false;
+
+        if (millis() - lastScoreTickMs >= SCORE_TICK_MS) {
+            lastScoreTickMs += SCORE_TICK_MS;
+            score++;
+            needsRedraw = true;
+        }
+
+        if (millis() - lastTrackTickMs >= TRACK_TICK_MS) {
+            lastTrackTickMs += TRACK_TICK_MS;
+            advanceTrack();
+            needsRedraw = true;
+        }
+
+        if (needsRedraw) {
+            renderPlayingScreen();
+        }
     }
 }
