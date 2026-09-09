@@ -48,6 +48,21 @@ char trackBuffer[TRACK_VISIBLE_CHARS + 1];
 int trackPixelOffset = 0;
 unsigned long lastTrackTickMs = 0;
 
+// Динозавр (крок 5: поки літера, стрибок по кнопці додамо в наступному кроці)
+enum class DinoState {
+    ON_GROUND,
+    JUMPING,
+};
+
+DinoState dinoState = DinoState::ON_GROUND;
+
+static constexpr char DINO_CHAR = 'D';
+static constexpr int DINO_X = 4;
+static constexpr int DINO_GROUND_Y = TRACK_Y - 8; // сидить одразу над рядком землі
+static constexpr int DINO_JUMP_OFFSET_PX = 16;
+static constexpr unsigned long JUMP_DURATION_MS = 1400;
+unsigned long jumpStartMs = 0;
+
 // Видає наступний символ треку, перебираючи патерни підряд по колу
 char nextTrackChar() {
     const char* pattern = GROUND_PATTERNS[trackPatternIndex];
@@ -61,6 +76,9 @@ char nextTrackChar() {
 }
 
 void initTrack() {
+    trackPatternIndex = 0;
+    trackCharIndex = 0;
+
     for (int i = 0; i < TRACK_VISIBLE_CHARS; i++) {
         trackBuffer[i] = nextTrackChar();
     }
@@ -107,6 +125,21 @@ void renderPlayingScreen() {
     display.setCursor(-trackPixelOffset, TRACK_Y);
     display.print(trackBuffer);
 
+    int dinoY = (dinoState == DinoState::JUMPING) ? (DINO_GROUND_Y - DINO_JUMP_OFFSET_PX) : DINO_GROUND_Y;
+    display.setCursor(DINO_X, dinoY);
+    display.print(DINO_CHAR);
+
+    display.display();
+}
+
+void renderGameOverScreen() {
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.println("GAME OVER");
+    display.print("score: ");
+    display.println(score);
     display.display();
 }
 
@@ -145,13 +178,24 @@ void setup() {
 }
 
 void loop() {
-    if (consumeButtonPress() && gameState == GameState::START_SCREEN) {
+    bool buttonPressed = consumeButtonPress();
+    GameState stateBeforeInput = gameState;
+
+    if (buttonPressed && stateBeforeInput == GameState::START_SCREEN) {
         gameState = GameState::PLAYING;
         score = 0;
+        dinoState = DinoState::ON_GROUND;
         lastScoreTickMs = millis();
         lastTrackTickMs = millis();
         initTrack();
         renderPlayingScreen();
+    } else if (buttonPressed && stateBeforeInput == GameState::PLAYING && dinoState == DinoState::ON_GROUND) {
+        dinoState = DinoState::JUMPING;
+        jumpStartMs = millis();
+        renderPlayingScreen();
+    } else if (buttonPressed && stateBeforeInput == GameState::GAME_OVER) {
+        gameState = GameState::START_SCREEN;
+        renderStartScreen();
     }
 
     if (gameState == GameState::PLAYING) {
@@ -163,13 +207,26 @@ void loop() {
             needsRedraw = true;
         }
 
+        if (dinoState == DinoState::JUMPING && millis() - jumpStartMs >= JUMP_DURATION_MS) {
+            dinoState = DinoState::ON_GROUND;
+            needsRedraw = true;
+        }
+
         if (millis() - lastTrackTickMs >= TRACK_TICK_MS) {
             lastTrackTickMs += TRACK_TICK_MS;
             advanceTrack();
             needsRedraw = true;
+
+            // динозавр займає лівий край екрана - перевіряємо перші два символи треку
+            bool obstacleAtDino = (trackBuffer[0] == '*') || (trackBuffer[1] == '*');
+            if (obstacleAtDino && dinoState == DinoState::ON_GROUND) {
+                gameState = GameState::GAME_OVER;
+            }
         }
 
-        if (needsRedraw) {
+        if (gameState == GameState::GAME_OVER) {
+            renderGameOverScreen();
+        } else if (needsRedraw) {
             renderPlayingScreen();
         }
     }
