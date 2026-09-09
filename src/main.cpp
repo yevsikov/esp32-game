@@ -15,7 +15,7 @@ static constexpr unsigned long DEBOUNCE_DELAY_MS = 50;
 
 Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RESET);
 
-// Стейти гри (крок 2: додано перехід START_SCREEN -> PLAYING по кнопці)
+// Стейти гри (крок 3: додано лічильник очок під час PLAYING)
 enum class GameState {
     START_SCREEN,
     PLAYING,
@@ -28,6 +28,10 @@ GameState gameState = GameState::START_SCREEN;
 int lastRawButtonState = LOW;
 int debouncedButtonState = LOW;
 unsigned long lastDebounceTime = 0;
+
+unsigned long score = 0;
+unsigned long lastScoreTickMs = 0;
+static constexpr unsigned long SCORE_TICK_MS = 1000;
 
 void renderStartScreen() {
     display.clearDisplay();
@@ -43,8 +47,18 @@ void renderPlayingScreen() {
     display.clearDisplay();
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
+
     display.setCursor(0, 0);
     display.println("PLAYING");
+
+    char scoreText[8];
+    snprintf(scoreText, sizeof(scoreText), "%lu", score);
+    int16_t x1, y1;
+    uint16_t textWidth, textHeight;
+    display.getTextBounds(scoreText, 0, 0, &x1, &y1, &textWidth, &textHeight);
+    display.setCursor(OLED_WIDTH - textWidth - 2, 0);
+    display.println(scoreText);
+
     display.display();
 }
 
@@ -85,6 +99,14 @@ void setup() {
 void loop() {
     if (consumeButtonPress() && gameState == GameState::START_SCREEN) {
         gameState = GameState::PLAYING;
+        score = 0;
+        lastScoreTickMs = millis();
+        renderPlayingScreen();
+    }
+
+    if (gameState == GameState::PLAYING && millis() - lastScoreTickMs >= SCORE_TICK_MS) {
+        lastScoreTickMs += SCORE_TICK_MS;
+        score++;
         renderPlayingScreen();
     }
 }
