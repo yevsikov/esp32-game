@@ -5,6 +5,7 @@
 #include <string.h>
 #include "ground_patterns.h"
 #include "dino_sprites.h"
+#include "cactus_sprites.h"
 // #include "sounds.h"
 
 static constexpr int OLED_WIDTH = 128;
@@ -45,6 +46,7 @@ static constexpr int TRACK_VISIBLE_CHARS = OLED_WIDTH / TRACK_CHAR_PX;
 static constexpr int TRACK_Y = 48;
 static constexpr unsigned long TRACK_TICK_MS = 100;
 static constexpr int TRACK_STEP_PX = 2;
+static constexpr int CACTUS_Y = TRACK_Y - CACTUS_SPRITE_HEIGHT; // кактус стоїть на лінії землі
 
 char trackBuffer[TRACK_VISIBLE_CHARS + 1];
 int trackPixelOffset = 0;
@@ -84,6 +86,21 @@ char nextTrackChar() {
         trackPatternIndex = (trackPatternIndex + 1) % GROUND_PATTERNS_COUNT;
     }
     return c;
+}
+
+bool cactusHitsDinoCenter() {
+    int dinoCenterX = DINO_X + DINO_SPRITE_WIDTH / 2;
+
+    for (int i = 0; i < TRACK_VISIBLE_CHARS; i++) {
+        if (trackBuffer[i] == '*') {
+            int cactusX = i * TRACK_CHAR_PX - trackPixelOffset;
+            if (cactusX <= dinoCenterX && dinoCenterX < cactusX + CACTUS_SPRITE_WIDTH) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 void initTrack() {
@@ -133,8 +150,13 @@ void renderPlayingScreen() {
     display.setCursor(OLED_WIDTH - textWidth - 2, 0);
     display.println(scoreText);
 
-    display.setCursor(-trackPixelOffset, TRACK_Y);
-    display.print(trackBuffer);
+    // крок 9.5: '_' взагалі не малюємо (порожня дорога), '*' замінюємо на спрайт кактуса
+    for (int i = 0; i < TRACK_VISIBLE_CHARS; i++) {
+        if (trackBuffer[i] == '*') {
+            int cactusX = i * TRACK_CHAR_PX - trackPixelOffset;
+            display.drawBitmap(cactusX, CACTUS_Y, CACTUS_SPRITE, CACTUS_SPRITE_WIDTH, CACTUS_SPRITE_HEIGHT, SSD1306_WHITE);
+        }
+    }
 
     const uint8_t* dinoFrame;
     if (dinoState == DinoState::JUMPING) {
@@ -250,8 +272,8 @@ void loop() {
             advanceTrack();
             needsRedraw = true;
 
-            // динозавр займає лівий край екрана - перевіряємо перші два символи треку
-            bool obstacleAtDino = (trackBuffer[0] == '*') || (trackBuffer[1] == '*');
+            // колізія спрацьовує, коли кактус доходить до середини динозавра
+            bool obstacleAtDino = cactusHitsDinoCenter();
             if (obstacleAtDino && dinoState == DinoState::ON_GROUND) {
                 gameState = GameState::GAME_OVER;
             }
