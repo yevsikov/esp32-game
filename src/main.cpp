@@ -63,6 +63,16 @@ static constexpr int DINO_GROUND_Y = TRACK_Y - DINO_SPRITE_HEIGHT; // сидит
 static constexpr int DINO_JUMP_OFFSET_PX = 16;
 static constexpr unsigned long JUMP_DURATION_MS = 1400;
 unsigned long jumpStartMs = 0;
+int dinoY = DINO_GROUND_Y;
+
+// крок 9: плавний рух по Y під час стрибка (синусоїда замість миттєвого стрибка)
+static constexpr unsigned long DINO_ANIM_TICK_MS = 30;
+unsigned long lastDinoAnimTickMs = 0;
+
+// крок 9: анімація бігу - чергування кадрів, поки динозавр стоїть на землі
+static constexpr unsigned long RUN_FRAME_TOGGLE_MS = 200;
+unsigned long lastRunToggleMs = 0;
+bool runFrameToggle = false;
 
 // Видає наступний символ треку, перебираючи патерни підряд по колу
 char nextTrackChar() {
@@ -126,8 +136,12 @@ void renderPlayingScreen() {
     display.setCursor(-trackPixelOffset, TRACK_Y);
     display.print(trackBuffer);
 
-    int dinoY = (dinoState == DinoState::JUMPING) ? (DINO_GROUND_Y - DINO_JUMP_OFFSET_PX) : DINO_GROUND_Y;
-    const uint8_t* dinoFrame = (dinoState == DinoState::JUMPING) ? DINO_FRAME_JUMP : DINO_FRAME_GROUND;
+    const uint8_t* dinoFrame;
+    if (dinoState == DinoState::JUMPING) {
+        dinoFrame = DINO_FRAME_JUMP;
+    } else {
+        dinoFrame = runFrameToggle ? DINO_FRAME_RUN : DINO_FRAME_GROUND;
+    }
     display.drawBitmap(DINO_X, dinoY, dinoFrame, DINO_SPRITE_WIDTH, DINO_SPRITE_HEIGHT, SSD1306_WHITE);
 
     display.display();
@@ -186,13 +200,17 @@ void loop() {
         gameState = GameState::PLAYING;
         score = 0;
         dinoState = DinoState::ON_GROUND;
+        dinoY = DINO_GROUND_Y;
+        runFrameToggle = false;
         lastScoreTickMs = millis();
         lastTrackTickMs = millis();
+        lastRunToggleMs = millis();
         initTrack();
         renderPlayingScreen();
     } else if (buttonPressed && stateBeforeInput == GameState::PLAYING && dinoState == DinoState::ON_GROUND) {
         dinoState = DinoState::JUMPING;
         jumpStartMs = millis();
+        lastDinoAnimTickMs = millis();
         renderPlayingScreen();
     } else if (buttonPressed && stateBeforeInput == GameState::GAME_OVER) {
         gameState = GameState::START_SCREEN;
@@ -208,8 +226,22 @@ void loop() {
             needsRedraw = true;
         }
 
-        if (dinoState == DinoState::JUMPING && millis() - jumpStartMs >= JUMP_DURATION_MS) {
-            dinoState = DinoState::ON_GROUND;
+        if (dinoState == DinoState::JUMPING) {
+            if (millis() - lastDinoAnimTickMs >= DINO_ANIM_TICK_MS) {
+                lastDinoAnimTickMs += DINO_ANIM_TICK_MS;
+                unsigned long elapsed = millis() - jumpStartMs;
+                if (elapsed >= JUMP_DURATION_MS) {
+                    dinoState = DinoState::ON_GROUND;
+                    dinoY = DINO_GROUND_Y;
+                } else {
+                    float t = (float)elapsed / (float)JUMP_DURATION_MS;
+                    dinoY = DINO_GROUND_Y - (int)(DINO_JUMP_OFFSET_PX * sinf(PI * t));
+                }
+                needsRedraw = true;
+            }
+        } else if (millis() - lastRunToggleMs >= RUN_FRAME_TOGGLE_MS) {
+            lastRunToggleMs += RUN_FRAME_TOGGLE_MS;
+            runFrameToggle = !runFrameToggle;
             needsRedraw = true;
         }
 
