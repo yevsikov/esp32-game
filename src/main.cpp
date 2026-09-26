@@ -4,6 +4,8 @@
 #include <Adafruit_SSD1306.h>
 #include <string.h>
 #include "ground_patterns.h"
+#include "dino_sprites.h"
+// #include "sounds.h"
 
 static constexpr int OLED_WIDTH = 128;
 static constexpr int OLED_HEIGHT = 64;
@@ -48,7 +50,7 @@ char trackBuffer[TRACK_VISIBLE_CHARS + 1];
 int trackPixelOffset = 0;
 unsigned long lastTrackTickMs = 0;
 
-// Динозавр (крок 5: поки літера, стрибок по кнопці додамо в наступному кроці)
+// Динозавр (крок 8: справжній бітмап-спрайт замість літери)
 enum class DinoState {
     ON_GROUND,
     JUMPING,
@@ -56,9 +58,8 @@ enum class DinoState {
 
 DinoState dinoState = DinoState::ON_GROUND;
 
-static constexpr char DINO_CHAR = 'D';
 static constexpr int DINO_X = 4;
-static constexpr int DINO_GROUND_Y = TRACK_Y - 8; // сидить одразу над рядком землі
+static constexpr int DINO_GROUND_Y = TRACK_Y - DINO_SPRITE_HEIGHT; // сидить одразу над рядком землі
 static constexpr int DINO_JUMP_OFFSET_PX = 16;
 static constexpr unsigned long JUMP_DURATION_MS = 1400;
 unsigned long jumpStartMs = 0;
@@ -126,8 +127,8 @@ void renderPlayingScreen() {
     display.print(trackBuffer);
 
     int dinoY = (dinoState == DinoState::JUMPING) ? (DINO_GROUND_Y - DINO_JUMP_OFFSET_PX) : DINO_GROUND_Y;
-    display.setCursor(DINO_X, dinoY);
-    display.print(DINO_CHAR);
+    const uint8_t* dinoFrame = (dinoState == DinoState::JUMPING) ? DINO_FRAME_JUMP : DINO_FRAME_GROUND;
+    display.drawBitmap(DINO_X, dinoY, dinoFrame, DINO_SPRITE_WIDTH, DINO_SPRITE_HEIGHT, SSD1306_WHITE);
 
     display.display();
 }
