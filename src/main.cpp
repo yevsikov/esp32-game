@@ -6,6 +6,7 @@
 #include "ground_patterns.h"
 #include "dino_sprites.h"
 #include "cactus_sprites.h"
+#include "start_splash.h"
 // #include "sounds.h"
 
 static constexpr int OLED_WIDTH = 128;
@@ -126,11 +127,7 @@ void advanceTrack() {
 
 void renderStartScreen() {
     display.clearDisplay();
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.println("t-rex game");
-    display.println("press button");
+    display.drawBitmap(0, 0, START_SPLASH, START_SPLASH_WIDTH, START_SPLASH_HEIGHT, SSD1306_WHITE);
     display.display();
 }
 
