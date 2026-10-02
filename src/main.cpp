@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Preferences.h>
 #include <string.h>
 #include "ground_patterns.h"
 #include "dino_sprites.h"
@@ -20,6 +21,7 @@ static constexpr int PIN_BUTTON = 4;
 static constexpr unsigned long DEBOUNCE_DELAY_MS = 50;
 
 Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RESET);
+Preferences preferences;
 
 // Стейти гри (крок 3: додано лічильник очок під час PLAYING)
 enum class GameState {
@@ -36,6 +38,7 @@ int debouncedButtonState = LOW;
 unsigned long lastDebounceTime = 0;
 
 unsigned long score = 0;
+unsigned long highScore = 0;
 unsigned long lastScoreTickMs = 0;
 static constexpr unsigned long SCORE_TICK_MS = 1000;
 static constexpr unsigned long GAME_OVER_LOCKOUT_MS = 1000;
@@ -188,7 +191,8 @@ void renderGameOverScreen() {
     display.println(score);
 
     display.setCursor(0, 34);
-    display.println("record: ---");
+    display.print("record: ");
+    display.println(highScore);
 
     display.setCursor(0, 46);
     display.println("(press to restart)");
@@ -217,6 +221,9 @@ void setup() {
     Serial.begin(115200);
     Wire.begin(PIN_SDA, PIN_SCL);
     pinMode(PIN_BUTTON, INPUT);
+
+    preferences.begin("trex", false);
+    highScore = preferences.getULong("highscore", 0);
 
     initSoundSystem();
 
@@ -274,6 +281,10 @@ void loop() {
         if (millis() - lastScoreTickMs >= SCORE_TICK_MS) {
             lastScoreTickMs += SCORE_TICK_MS;
             score++;
+            if (score > highScore) {
+                highScore = score;
+                preferences.putULong("highscore", highScore);
+            }
             needsRedraw = true;
         }
 
@@ -304,6 +315,10 @@ void loop() {
             // колізія спрацьовує, коли кактус доходить до середини динозавра
             bool obstacleAtDino = cactusHitsDinoCenter();
             if (obstacleAtDino && dinoState == DinoState::ON_GROUND) {
+                if (score > highScore) {
+                    highScore = score;
+                    preferences.putULong("highscore", highScore);
+                }
                 stopBackgroundMusic();
                 playGameOverSound();
                 gameState = GameState::GAME_OVER;
