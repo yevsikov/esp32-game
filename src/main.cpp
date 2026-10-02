@@ -38,8 +38,10 @@ unsigned long lastDebounceTime = 0;
 unsigned long score = 0;
 unsigned long lastScoreTickMs = 0;
 static constexpr unsigned long SCORE_TICK_MS = 1000;
+static constexpr unsigned long GAME_OVER_LOCKOUT_MS = 1000;
 
 unsigned long lastSoundTickMs = 0;
+unsigned long gameOverEnteredMs = 0;
 
 int trackPatternIndex = 0;
 int trackCharIndex = 0;
@@ -245,9 +247,11 @@ void loop() {
         playJumpSound();
         renderPlayingScreen();
     } else if (buttonPressed && stateBeforeInput == GameState::GAME_OVER) {
-        stopAllSounds();
-        gameState = GameState::START_SCREEN;
-        renderStartScreen();
+        if (now - gameOverEnteredMs >= GAME_OVER_LOCKOUT_MS) {
+            stopAllSounds();
+            gameState = GameState::START_SCREEN;
+            renderStartScreen();
+        }
     }
 
     if (gameState == GameState::PLAYING) {
@@ -289,11 +293,12 @@ void loop() {
                 stopBackgroundMusic();
                 playGameOverSound();
                 gameState = GameState::GAME_OVER;
+                gameOverEnteredMs = millis();
+                renderGameOverScreen();
             }
         }
 
         if (gameState == GameState::GAME_OVER) {
-            renderGameOverScreen();
         } else if (needsRedraw) {
             renderPlayingScreen();
         }
