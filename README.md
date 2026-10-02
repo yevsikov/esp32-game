@@ -62,7 +62,8 @@ LCD SSD1306-Revision 1.1
 - ЗСУ
 - Beetroot Academy
 - Copilot with GPT-5.4 mini
-- https://javl.github.io/image2cpp/
+- [image2cpp tool](https://javl.github.io/image2cpp/)
+- [Ivanka](https://www.youtube.com/@paper-youtube-ua) for the design of the device case
 
 
 ## Result
