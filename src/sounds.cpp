@@ -22,6 +22,7 @@ SequencePlayer effectPlayer;
 bool backgroundRequested = false;
 
 const Note backgroundMelody[] = {
+  // --- Part 1 ---
   {NOTE_E4, 150}, {NOTE_F4, 150}, {NOTE_G4, 300}, {NOTE_C5, 800},
   {REST, 100},
   {NOTE_D4, 150}, {NOTE_E4, 150}, {NOTE_F4, 800},
@@ -37,8 +38,80 @@ const Note backgroundMelody[] = {
   {NOTE_D5, 150}, {NOTE_E5, 150}, {NOTE_F5, 800},
   {REST, 100},
 
-  {NOTE_G4, 150}, {NOTE_G4, 150}, {NOTE_E5, 300}, {NOTE_D5, 150}, {NOTE_G4, 150}, {NOTE_E5, 300}, {NOTE_D5, 150},
-  {NOTE_G4, 150}, {NOTE_E5, 300}, {NOTE_D5, 150}, {NOTE_G4, 150}, {NOTE_F5, 300}, {NOTE_E5, 150}, {NOTE_C5, 800},
+  {NOTE_G4, 150}, {NOTE_G4, 150}, {NOTE_E5, 300},
+  {NOTE_D5, 150}, {NOTE_G4, 150}, {NOTE_E5, 300}, {NOTE_D5, 150},
+  {NOTE_G4, 150}, {NOTE_E5, 300}, {NOTE_D5, 150},
+  {NOTE_G4, 150}, {NOTE_F5, 300}, {NOTE_E5, 150}, {NOTE_C5, 800},
+  {REST, 400},
+
+  // --- Part 2 ---
+  {NOTE_C5, 200}, {NOTE_D5, 200}, {NOTE_E5, 400},
+  {NOTE_G5, 600},
+  {REST, 100},
+
+  {NOTE_E5, 200}, {NOTE_D5, 200}, {NOTE_C5, 400},
+  {NOTE_A4, 600},
+  {REST, 100},
+
+  {NOTE_A4, 150}, {NOTE_B4, 150}, {NOTE_C5, 300},
+  {NOTE_E5, 600},
+  {REST, 100},
+
+  {NOTE_D5, 150}, {NOTE_C5, 150}, {NOTE_B4, 300},
+  {NOTE_G4, 600},
+  {REST, 200},
+
+  {NOTE_G4, 150}, {NOTE_A4, 150}, {NOTE_B4, 300},
+  {NOTE_D5, 600},
+  {REST, 100},
+
+  {NOTE_C5, 150}, {NOTE_B4, 150}, {NOTE_A4, 300},
+  {NOTE_F4, 600},
+  {REST, 200},
+
+  // --- Part 3 ---
+  {NOTE_E4, 150}, {NOTE_G4, 150}, {NOTE_A4, 300},
+  {NOTE_C5, 600},
+  {REST, 100},
+
+  {NOTE_A4, 150}, {NOTE_B4, 150}, {NOTE_C5, 300},
+  {NOTE_E5, 600},
+  {REST, 100},
+
+  {NOTE_D5, 200}, {NOTE_C5, 200}, {NOTE_B4, 400},
+  {NOTE_G4, 600},
+  {REST, 100},
+
+  {NOTE_A4, 150}, {NOTE_C5, 150}, {NOTE_E5, 300},
+  {NOTE_D5, 600},
+  {REST, 100},
+
+  {NOTE_G4, 150}, {NOTE_A4, 150}, {NOTE_B4, 300},
+  {NOTE_C5, 300}, {NOTE_D5, 300},
+  {NOTE_E5, 600},
+  {REST, 200},
+
+  // --- Part 4 / return ---
+  {NOTE_E5, 150}, {NOTE_D5, 150}, {NOTE_C5, 300},
+  {NOTE_A4, 600},
+  {REST, 100},
+
+  {NOTE_G4, 150}, {NOTE_A4, 150}, {NOTE_B4, 300},
+  {NOTE_D5, 600},
+  {REST, 100},
+
+  {NOTE_C5, 150}, {NOTE_D5, 150}, {NOTE_E5, 300},
+  {NOTE_G5, 600},
+  {REST, 100},
+
+  {NOTE_E5, 150}, {NOTE_D5, 150}, {NOTE_C5, 300},
+  {NOTE_A4, 600},
+  {REST, 200},
+
+  // --- Ending ---
+  {NOTE_G4, 150}, {NOTE_A4, 150}, {NOTE_B4, 300},
+  {NOTE_C5, 300}, {NOTE_D5, 300},
+  {NOTE_E5, 800},
   {REST, 400}
 };
 
