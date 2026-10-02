@@ -7,7 +7,7 @@
 #include "dino_sprites.h"
 #include "cactus_sprites.h"
 #include "start_splash.h"
-// #include "sounds.h"
+#include "sounds.h"
 
 static constexpr int OLED_WIDTH = 128;
 static constexpr int OLED_HEIGHT = 64;
@@ -38,6 +38,8 @@ unsigned long lastDebounceTime = 0;
 unsigned long score = 0;
 unsigned long lastScoreTickMs = 0;
 static constexpr unsigned long SCORE_TICK_MS = 1000;
+
+unsigned long lastSoundTickMs = 0;
 
 int trackPatternIndex = 0;
 int trackCharIndex = 0;
@@ -200,6 +202,8 @@ void setup() {
     Wire.begin(PIN_SDA, PIN_SCL);
     pinMode(PIN_BUTTON, INPUT);
 
+    initSoundSystem();
+
     if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
         Serial.println("SSD1306 init failed");
         while (true) {
@@ -208,10 +212,17 @@ void setup() {
     }
 
     renderStartScreen();
+    lastSoundTickMs = millis();
     Serial.println("System initialized!");
 }
 
 void loop() {
+    unsigned long now = millis();
+    if (now - lastSoundTickMs >= 10) {
+        updateSoundSystem(now - lastSoundTickMs);
+        lastSoundTickMs = now;
+    }
+
     bool buttonPressed = consumeButtonPress();
     GameState stateBeforeInput = gameState;
 
@@ -224,14 +235,17 @@ void loop() {
         lastScoreTickMs = millis();
         lastTrackTickMs = millis();
         lastRunToggleMs = millis();
+        startBackgroundMusic();
         initTrack();
         renderPlayingScreen();
     } else if (buttonPressed && stateBeforeInput == GameState::PLAYING && dinoState == DinoState::ON_GROUND) {
         dinoState = DinoState::JUMPING;
         jumpStartMs = millis();
         lastDinoAnimTickMs = millis();
+        playJumpSound();
         renderPlayingScreen();
     } else if (buttonPressed && stateBeforeInput == GameState::GAME_OVER) {
+        stopAllSounds();
         gameState = GameState::START_SCREEN;
         renderStartScreen();
     }
@@ -272,6 +286,8 @@ void loop() {
             // колізія спрацьовує, коли кактус доходить до середини динозавра
             bool obstacleAtDino = cactusHitsDinoCenter();
             if (obstacleAtDino && dinoState == DinoState::ON_GROUND) {
+                stopBackgroundMusic();
+                playGameOverSound();
                 gameState = GameState::GAME_OVER;
             }
         }
