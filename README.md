@@ -38,9 +38,9 @@ GPIO4 ─────────────┼──────────�
 Beeper
 
 +--------+
-| Beeper |---> 3.3V
-|        |---> GPIO 5
-|        |---> GND
+| Beeper |- + --> 3.3V
+|        |- S --> GPIO 5
+|        |- - --> GND
 +--------+
 
 
@@ -57,6 +57,12 @@ LCD SSD1306-Revision 1.1
 
 
 ```
+
+## Thanks
+- ЗСУ
+- Beetroot Academy
+- Copilot with GPT-5.4 mini
+- https://javl.github.io/image2cpp/
 
 
 ## Result
