@@ -173,11 +173,25 @@ void renderPlayingScreen() {
 void renderGameOverScreen() {
     display.clearDisplay();
     display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(2);
+
+    const char* title = "GAME OVER";
+    int16_t x1, y1;
+    uint16_t textWidth, textHeight;
+    display.getTextBounds(title, 0, 0, &x1, &y1, &textWidth, &textHeight);
+    display.setCursor((OLED_WIDTH - textWidth) / 2, 0);
+    display.println(title);
+
     display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.println("GAME OVER");
+    display.setCursor(0, 22);
     display.print("score: ");
     display.println(score);
+
+    display.setCursor(0, 34);
+    display.println("record: ---");
+
+    display.setCursor(0, 46);
+    display.println("(press to restart)");
     display.display();
 }
 
