@@ -1,3 +1,5 @@
+
+
 # ESP32 Learning Project
 
 This is a small educational project for the [Embedded Development course](https://beetroot.academy/courses/online/kurs-embedded-development)
@@ -73,6 +75,9 @@ LCD SSD1306-Revision 1.1
 If GIF preview is not displayed in your viewer, open it directly: [result_01.gif](./result_01.gif)
 
 
-<video src="./result_02.mp4" controls width="600"></video>
 
+https://github.com/user-attachments/assets/0293796f-1d57-4d7a-832b-7ee88e431bec
+
+For the best experience, turn on the sound. 
+ 
 If mp4 preview is not displayed in your viewer, open it directly: [result_02.mp4](./result_02.mp4)
