@@ -68,6 +68,11 @@ LCD SSD1306-Revision 1.1
 
 ## Result
 
-![Result](./result.gif)
+![Result scheme](./result_01.gif)
 
-If GIF preview is not displayed in your viewer, open it directly: [result.gif](./result.gif)
+If GIF preview is not displayed in your viewer, open it directly: [result_01.gif](./result_01.gif)
+
+
+![Result device](./result_02.mp4)
+
+If GIF preview is not displayed in your viewer, open it directly: [result_02.mp4](./result_02.mp4)
