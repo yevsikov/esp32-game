@@ -73,6 +73,6 @@ LCD SSD1306-Revision 1.1
 If GIF preview is not displayed in your viewer, open it directly: [result_01.gif](./result_01.gif)
 
 
-![Result device](./result_02.mp4)
+<video src="./result_02.mp4" controls width="600"></video>
 
-If GIF preview is not displayed in your viewer, open it directly: [result_02.mp4](./result_02.mp4)
+If mp4 preview is not displayed in your viewer, open it directly: [result_02.mp4](./result_02.mp4)
