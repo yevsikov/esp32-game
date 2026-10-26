@@ -56,9 +56,10 @@ LCD SSD1306-Revision 1.1
 |        |-- GND ----> GND
 +--------+
 
-
-
 ```
+
+Scheme simulator: https://app.cirkitdesigner.com/project/d0ea8115-235a-48bc-8ff4-92250ce1e4c5
+
 
 ## Thanks
 - ЗСУ
@@ -80,4 +81,4 @@ https://github.com/user-attachments/assets/0293796f-1d57-4d7a-832b-7ee88e431bec
 
 For the best experience, turn on the sound. 
  
-If mp4 preview is not displayed in your viewer, open it directly: [result_02.mp4](./result_02.mp4)
+If mp4 preview is not displayed in your viewer, open it directly: [result_03.mp4](./result_03.mp4)
