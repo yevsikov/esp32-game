@@ -7,6 +7,7 @@
 namespace {
 
 constexpr char WEB_AP_SSID[] = "T-Rex-Console";
+constexpr uint8_t RESULT_CAPACITY = 30;
 WebServer server(80);
 
 const char HELLO_PAGE[] PROGMEM = R"rawliteral(
@@ -51,6 +52,49 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
+void handleResultsRequest() {
+    Preferences recordPreferences;
+    if (!recordPreferences.begin("trex", true)) {
+        server.send(500, "application/json", "{\"error\":\"storage_unavailable\"}");
+        return;
+    }
+
+    unsigned long results[RESULT_CAPACITY] = {};
+    uint8_t writeIndex = recordPreferences.getUChar("resultsIndex", 0);
+    uint8_t resultCount = recordPreferences.getUChar("resultCount", 0);
+    size_t resultsSize = recordPreferences.getBytesLength("results");
+
+    if (writeIndex >= RESULT_CAPACITY || resultCount > RESULT_CAPACITY
+        || (resultCount > 0 && resultsSize != sizeof(results))
+        || (resultsSize == sizeof(results)
+            && recordPreferences.getBytes("results", results, sizeof(results)) != sizeof(results))) {
+        recordPreferences.end();
+        server.send(500, "application/json", "{\"error\":\"invalid_history\"}");
+        return;
+    }
+
+    recordPreferences.end();
+
+    char response[400];
+    size_t responseLength = snprintf(response, sizeof(response), "{\"count\":%u,\"results\":[", resultCount);
+    size_t firstIndex = (writeIndex + RESULT_CAPACITY - resultCount) % RESULT_CAPACITY;
+
+    for (uint8_t i = 0; i < resultCount; i++) {
+        size_t index = (firstIndex + i) % RESULT_CAPACITY;
+        int written = snprintf(response + responseLength, sizeof(response) - responseLength,
+                               "%s%lu", i == 0 ? "" : ",", results[index]);
+        if (written < 0 || static_cast<size_t>(written) >= sizeof(response) - responseLength) {
+            server.send(500, "application/json", "{\"error\":\"response_too_large\"}");
+            return;
+        }
+        responseLength += static_cast<size_t>(written);
+    }
+
+    snprintf(response + responseLength, sizeof(response) - responseLength, "]}");
+    server.sendHeader("Cache-Control", "no-store");
+    server.send(200, "application/json", response);
+}
+
 } // namespace
 
 void startWebServer() {
@@ -78,6 +122,7 @@ void startWebServer() {
         server.sendHeader("Cache-Control", "no-store");
         server.send(200, "application/json", response);
     });
+    server.on("/api/results", HTTP_GET, handleResultsRequest);
     server.onNotFound([]() {
         server.send(404, "text/plain; charset=utf-8", "Not found");
     });
