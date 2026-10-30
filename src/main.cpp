@@ -9,6 +9,7 @@
 #include "cactus_sprites.h"
 #include "start_splash.h"
 #include "sounds.h"
+#include "web_server.h"
 
 static constexpr int OLED_WIDTH = 128;
 static constexpr int OLED_HEIGHT = 64;
@@ -226,6 +227,7 @@ void setup() {
     highScore = preferences.getULong("highscore", 0);
 
     initSoundSystem();
+    startWebServer();
 
     if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
         Serial.println("SSD1306 init failed");
@@ -240,6 +242,8 @@ void setup() {
 }
 
 void loop() {
+    handleWebServer();
+
     unsigned long now = millis();
     if (now - lastSoundTickMs >= 10) {
         updateSoundSystem(now - lastSoundTickMs);
