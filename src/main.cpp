@@ -23,7 +23,7 @@ static constexpr unsigned long DEBOUNCE_DELAY_MS = 50;
 Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RESET);
 Preferences preferences;
 
-// Стейти гри (крок 3: додано лічильник очок під час PLAYING)
+// Стейти гри
 enum class GameState {
     START_SCREEN,
     PLAYING,
@@ -281,10 +281,6 @@ void loop() {
         if (millis() - lastScoreTickMs >= SCORE_TICK_MS) {
             lastScoreTickMs += SCORE_TICK_MS;
             score++;
-            if (score > highScore) {
-                highScore = score;
-                preferences.putULong("highscore", highScore);
-            }
             needsRedraw = true;
         }
 
