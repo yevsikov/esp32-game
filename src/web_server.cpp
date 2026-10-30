@@ -18,16 +18,17 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>T-Rex Console</title>
     <style>
-        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #101820; color: #f2f5f4; font-family: sans-serif; }
+                :root { --background: #102705ff; --olive: #BF9000; --olive-muted: #8B8664; --white: #FFFFFF; }
+                body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--background); color: var(--white); font-family: sans-serif; }
         main { padding: 2rem; text-align: center; }
         h1 { margin: 0 0 1.5rem; font-size: 1.25rem; font-weight: 500; }
-        p { margin: 0; color: #aab8b8; }
-        output { display: block; margin-top: .5rem; color: #8ee3a1; font-size: 4rem; font-variant-numeric: tabular-nums; }
+                p { margin: 0; color: var(--olive-muted); }
+                output { display: block; margin-top: .5rem; color: var(--olive); font-size: 4rem; font-variant-numeric: tabular-nums; }
         #status { margin-top: 1rem; font-size: .875rem; }
         section { margin-top: 2rem; }
-        h2 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 500; }
+                h2 { margin: 0 0 .75rem; color: var(--olive); font-size: 1rem; font-weight: 500; }
         #results { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin: 0; padding: 0; list-style: none; }
-        #results li { min-width: 2rem; padding: .4rem .55rem; border: 1px solid #40504d; border-radius: 4px; color: #f2f5f4; font-variant-numeric: tabular-nums; }
+                #results li { min-width: 2rem; padding: .4rem .55rem; border: 1px solid var(--olive-muted); border-radius: 4px; color: var(--white); font-variant-numeric: tabular-nums; }
         #history-status { margin-top: .75rem; font-size: .875rem; }
     </style>
 </head>
