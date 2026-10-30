@@ -3,6 +3,7 @@
 #include <WebServer.h>
 #include <WiFi.h>
 #include "web_server.h"
+#include "web_app.h"
 
 namespace {
 
@@ -20,13 +21,14 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
     <style>
                 :root { --background: #102705ff; --olive: #BF9000; --olive-muted: #8B8664; --white: #FFFFFF; }
                 body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--background); color: var(--white); font-family: sans-serif; }
-        main { padding: 2rem; text-align: center; }
+            main { width: min(44rem, calc(100vw - 2rem)); padding: 2rem 1rem; box-sizing: border-box; text-align: center; }
         h1 { margin: 0 0 1.5rem; font-size: 1.25rem; font-weight: 500; }
                 p { margin: 0; color: var(--olive-muted); }
                 output { display: block; margin-top: .5rem; color: var(--olive); font-size: 4rem; font-variant-numeric: tabular-nums; }
         #status { margin-top: 1rem; font-size: .875rem; }
         section { margin-top: 2rem; }
                 h2 { margin: 0 0 .75rem; color: var(--olive); font-size: 1rem; font-weight: 500; }
+        #history-chart { display: block; width: 100%; height: 230px; margin: .5rem auto 1rem; }
         #results { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin: 0; padding: 0; list-style: none; }
                 #results li { min-width: 2rem; padding: .4rem .55rem; border: 1px solid var(--olive-muted); border-radius: 4px; color: var(--white); font-variant-numeric: tabular-nums; }
         #history-status { margin-top: .75rem; font-size: .875rem; }
@@ -40,50 +42,12 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
         <p id="status" role="status">Reading saved record</p>
         <section>
             <h2>Recent games (oldest to newest)</h2>
+            <canvas id="history-chart" role="img" aria-label="Scores over the last games"></canvas>
             <ol id="results" aria-live="polite"></ol>
             <p id="history-status" role="status">Reading game history</p>
         </section>
     </main>
-    <script>
-        fetch('/api/record', { cache: 'no-store' })
-            .then(response => {
-                if (!response.ok) throw new Error('Request failed');
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById('record').textContent = String(data.record);
-                document.getElementById('status').textContent = 'Saved on this console';
-            })
-            .catch(() => {
-                document.getElementById('record').textContent = '--';
-                document.getElementById('status').textContent = 'Could not load record';
-            });
-
-        fetch('/api/results', { cache: 'no-store' })
-            .then(response => {
-                if (!response.ok) throw new Error('Request failed');
-                return response.json();
-            })
-            .then(data => {
-                if (!Array.isArray(data.results)) throw new Error('Invalid results');
-                const list = document.getElementById('results');
-                if (data.results.length === 0) {
-                    const item = document.createElement('li');
-                    item.textContent = 'No games yet';
-                    list.appendChild(item);
-                } else {
-                    data.results.forEach(result => {
-                        const item = document.createElement('li');
-                        item.textContent = String(result);
-                        list.appendChild(item);
-                    });
-                }
-                document.getElementById('history-status').textContent = `${data.results.length} games stored`;
-            })
-            .catch(() => {
-                document.getElementById('history-status').textContent = 'Could not load game history';
-            });
-    </script>
+    <script src="/app.js" defer></script>
 </body>
 </html>
 )rawliteral";
@@ -142,6 +106,9 @@ void startWebServer() {
 
     server.on("/", HTTP_GET, []() {
         server.send_P(200, "text/html; charset=utf-8", HELLO_PAGE);
+    });
+    server.on("/app.js", HTTP_GET, []() {
+        server.send_P(200, "application/javascript; charset=utf-8", WEB_APP_JS);
     });
     server.on("/api/record", HTTP_GET, []() {
         Preferences recordPreferences;
