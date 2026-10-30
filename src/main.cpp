@@ -43,6 +43,11 @@ unsigned long highScore = 0;
 unsigned long lastScoreTickMs = 0;
 static constexpr unsigned long SCORE_TICK_MS = 1000;
 static constexpr unsigned long GAME_OVER_LOCKOUT_MS = 1000;
+static constexpr uint8_t BUFFER_SIZE = 30;
+
+unsigned long gameResults[BUFFER_SIZE] = {};
+uint8_t writeIndex = 0;
+uint8_t resultCount = 0;
 
 unsigned long lastSoundTickMs = 0;
 unsigned long gameOverEnteredMs = 0;
@@ -218,6 +223,38 @@ bool consumeButtonPress() {
     return pressedEdge;
 }
 
+void loadResults() {
+    if (preferences.getBytesLength("results") != sizeof(gameResults)
+        || preferences.getBytes("results", gameResults, sizeof(gameResults)) != sizeof(gameResults)) {
+        memset(gameResults, 0, sizeof(gameResults));
+        writeIndex = 0;
+        resultCount = 0;
+        return;
+    }
+
+    writeIndex = preferences.getUChar("resultsIndex", 0);
+    resultCount = preferences.getUChar("resultCount", 0);
+
+    if (writeIndex >= BUFFER_SIZE || resultCount > BUFFER_SIZE) {
+        memset(gameResults, 0, sizeof(gameResults));
+        writeIndex = 0;
+        resultCount = 0;
+    }
+}
+
+void addResult(unsigned long result) {
+    gameResults[writeIndex] = result;
+    writeIndex = (writeIndex + 1) % BUFFER_SIZE;
+
+    if (resultCount < BUFFER_SIZE) {
+        resultCount++;
+    }
+
+    preferences.putBytes("results", gameResults, sizeof(gameResults));
+    preferences.putUChar("resultsIndex", writeIndex);
+    preferences.putUChar("resultCount", resultCount);
+}
+
 void setup() {
     Serial.begin(115200);
     Wire.begin(PIN_SDA, PIN_SCL);
@@ -225,6 +262,7 @@ void setup() {
 
     preferences.begin("trex", false);
     highScore = preferences.getULong("highscore", 0);
+    loadResults();
 
     initSoundSystem();
     startWebServer();
@@ -315,6 +353,7 @@ void loop() {
             // колізія спрацьовує, коли кактус доходить до середини динозавра
             bool obstacleAtDino = cactusHitsDinoCenter();
             if (obstacleAtDino && dinoState == DinoState::ON_GROUND) {
+                addResult(score);
                 if (score > highScore) {
                     highScore = score;
                     preferences.putULong("highscore", highScore);
