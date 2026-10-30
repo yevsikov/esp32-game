@@ -104,11 +104,11 @@ fetch('/api/record', { cache: 'no-store' })
     })
     .then(data => {
         recordOutput.textContent = String(data.record);
-        recordStatus.textContent = 'Saved on this console';
+        recordStatus.textContent = '';
     })
     .catch(() => {
         recordOutput.textContent = '--';
-        recordStatus.textContent = 'Could not load record';
+        recordStatus.textContent = 'Here is no saved high score yet';
     });
 
 fetch('/api/results', { cache: 'no-store' })

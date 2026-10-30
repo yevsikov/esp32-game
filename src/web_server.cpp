@@ -37,11 +37,11 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
 <body>
     <main>
         <h1>T-Rex Console</h1>
-        <p>High score</p>
+        <h2>High score</h2>
         <output id="record">Loading...</output>
         <p id="status" role="status">Reading saved record</p>
         <section>
-            <h2>Recent games (oldest to newest)</h2>
+            <h2>Recent games</h2>
             <canvas id="history-chart" role="img" aria-label="Scores over the last games"></canvas>
             <ol id="results" aria-live="polite"></ol>
             <p id="history-status" role="status">Reading game history</p>
