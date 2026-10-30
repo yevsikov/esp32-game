@@ -58,13 +58,16 @@ int trackCharIndex = 0;
 static constexpr int TRACK_CHAR_PX = 6; // ширина символу шрифту розміру 1
 static constexpr int TRACK_VISIBLE_CHARS = OLED_WIDTH / TRACK_CHAR_PX;
 static constexpr int TRACK_Y = 48;
-static constexpr unsigned long TRACK_TICK_MS = 100;
+static constexpr unsigned long BASE_TRACK_TICK_MS = 100;
+static constexpr unsigned long MIN_TRACK_TICK_MS = 82;
+static constexpr unsigned long TRACK_SPEEDUP_STEP_MS = 3;
 static constexpr int TRACK_STEP_PX = 2;
 static constexpr int CACTUS_Y = TRACK_Y - CACTUS_SPRITE_HEIGHT; // кактус стоїть на лінії землі
 
 char trackBuffer[TRACK_VISIBLE_CHARS + 1];
 int trackPixelOffset = 0;
 unsigned long lastTrackTickMs = 0;
+unsigned long currentTrackTickMs = BASE_TRACK_TICK_MS;
 
 // Динозавр (крок 8: справжній бітмап-спрайт замість літери)
 enum class DinoState {
@@ -120,6 +123,7 @@ bool cactusHitsDinoCenter() {
 void initTrack() {
     trackPatternIndex = 0;
     trackCharIndex = 0;
+    currentTrackTickMs = BASE_TRACK_TICK_MS;
 
     for (int i = 0; i < TRACK_VISIBLE_CHARS; i++) {
         trackBuffer[i] = nextTrackChar();
@@ -134,7 +138,17 @@ void advanceTrack() {
     if (trackPixelOffset >= TRACK_CHAR_PX) {
         trackPixelOffset -= TRACK_CHAR_PX;
         memmove(trackBuffer, trackBuffer + 1, TRACK_VISIBLE_CHARS - 1);
+        int previousPatternIndex = trackPatternIndex;
         trackBuffer[TRACK_VISIBLE_CHARS - 1] = nextTrackChar();
+
+        if (previousPatternIndex == GROUND_PATTERNS_COUNT - 1 && trackPatternIndex == 0) {
+            if (currentTrackTickMs > MIN_TRACK_TICK_MS + TRACK_SPEEDUP_STEP_MS) {
+                currentTrackTickMs -= TRACK_SPEEDUP_STEP_MS;
+            } else {
+                currentTrackTickMs = MIN_TRACK_TICK_MS;
+            }
+            Serial.printf("Track cycle complete; scroll interval: %lu ms\n", currentTrackTickMs);
+        }
     }
 }
 
@@ -345,8 +359,8 @@ void loop() {
             needsRedraw = true;
         }
 
-        if (millis() - lastTrackTickMs >= TRACK_TICK_MS) {
-            lastTrackTickMs += TRACK_TICK_MS;
+        if (millis() - lastTrackTickMs >= currentTrackTickMs) {
+            lastTrackTickMs += currentTrackTickMs;
             advanceTrack();
             needsRedraw = true;
 
