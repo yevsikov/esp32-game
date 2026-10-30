@@ -29,8 +29,8 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
         section { margin-top: 2rem; }
                 h2 { margin: 0 0 .75rem; color: var(--olive); font-size: 1rem; font-weight: 500; }
         #history-chart { display: block; width: 100%; height: 230px; margin: .5rem auto 1rem; }
-        #results { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin: 0; padding: 0; list-style: none; }
-                #results li { min-width: 2rem; padding: .4rem .55rem; border: 1px solid var(--olive-muted); border-radius: 4px; color: var(--white); font-variant-numeric: tabular-nums; }
+        #export-csv { margin-top: .75rem; padding: .55rem .85rem; border: 1px solid var(--olive); border-radius: 4px; background: transparent; color: var(--white); font: inherit; cursor: pointer; }
+        #export-csv:disabled { opacity: .5; cursor: default; }
         #history-status { margin-top: .75rem; font-size: .875rem; }
     </style>
 </head>
@@ -43,7 +43,7 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
         <section>
             <h2>Recent games</h2>
             <canvas id="history-chart" role="img" aria-label="Scores over the last games"></canvas>
-            <ol id="results" aria-live="polite"></ol>
+            <button id="export-csv" type="button" disabled>Export CSV</button>
             <p id="history-status" role="status">Reading game history</p>
         </section>
     </main>

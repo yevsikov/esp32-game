@@ -6,9 +6,22 @@ static const char WEB_APP_JS[] PROGMEM = R"rawliteral(
 const recordOutput = document.getElementById('record');
 const recordStatus = document.getElementById('status');
 const historyStatus = document.getElementById('history-status');
-const resultsList = document.getElementById('results');
+const exportButton = document.getElementById('export-csv');
 const chart = document.getElementById('history-chart');
 let gameScores = [];
+
+exportButton.addEventListener('click', () => {
+    const rows = ['game_number,score'];
+    gameScores.forEach((score, index) => rows.push(`${index + 1},${score}`));
+
+    const csv = new Blob(['\uFEFF', rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(csv);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'trex-results.csv';
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
 
 function drawHistoryChart(scores) {
     const bounds = chart.getBoundingClientRect();
@@ -120,13 +133,7 @@ fetch('/api/results', { cache: 'no-store' })
         if (!Array.isArray(data.results)) throw new Error('Invalid results');
         gameScores = data.results.map(Number);
         if (gameScores.some(score => !Number.isFinite(score))) throw new Error('Invalid score');
-
-        for (const score of gameScores) {
-            const item = document.createElement('li');
-            item.textContent = String(score);
-            resultsList.appendChild(item);
-        }
-
+        exportButton.disabled = gameScores.length === 0;
         historyStatus.textContent = `${gameScores.length} games stored`;
         drawHistoryChart(gameScores);
     })
