@@ -24,6 +24,11 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
         p { margin: 0; color: #aab8b8; }
         output { display: block; margin-top: .5rem; color: #8ee3a1; font-size: 4rem; font-variant-numeric: tabular-nums; }
         #status { margin-top: 1rem; font-size: .875rem; }
+        section { margin-top: 2rem; }
+        h2 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 500; }
+        #results { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+        #results li { min-width: 2rem; padding: .4rem .55rem; border: 1px solid #40504d; border-radius: 4px; color: #f2f5f4; font-variant-numeric: tabular-nums; }
+        #history-status { margin-top: .75rem; font-size: .875rem; }
     </style>
 </head>
 <body>
@@ -32,6 +37,11 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
         <p>High score</p>
         <output id="record">Loading...</output>
         <p id="status" role="status">Reading saved record</p>
+        <section>
+            <h2>Recent games (oldest to newest)</h2>
+            <ol id="results" aria-live="polite"></ol>
+            <p id="history-status" role="status">Reading game history</p>
+        </section>
     </main>
     <script>
         fetch('/api/record', { cache: 'no-store' })
@@ -46,6 +56,31 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
             .catch(() => {
                 document.getElementById('record').textContent = '--';
                 document.getElementById('status').textContent = 'Could not load record';
+            });
+
+        fetch('/api/results', { cache: 'no-store' })
+            .then(response => {
+                if (!response.ok) throw new Error('Request failed');
+                return response.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data.results)) throw new Error('Invalid results');
+                const list = document.getElementById('results');
+                if (data.results.length === 0) {
+                    const item = document.createElement('li');
+                    item.textContent = 'No games yet';
+                    list.appendChild(item);
+                } else {
+                    data.results.forEach(result => {
+                        const item = document.createElement('li');
+                        item.textContent = String(result);
+                        list.appendChild(item);
+                    });
+                }
+                document.getElementById('history-status').textContent = `${data.results.length} games stored`;
+            })
+            .catch(() => {
+                document.getElementById('history-status').textContent = 'Could not load game history';
             });
     </script>
 </body>
