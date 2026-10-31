@@ -20,6 +20,7 @@ struct SequencePlayer {
 SequencePlayer backgroundPlayer;
 SequencePlayer effectPlayer;
 bool backgroundRequested = false;
+bool soundEnabled = true;
 
 const Note backgroundMelody[] = {
   // --- Part 1 ---
@@ -142,7 +143,7 @@ void stopNote() {
 }
 
 void playFrequency(int frequency) {
-  if (frequency <= 0) {
+  if (!soundEnabled || frequency <= 0) {
     stopNote();
     return;
   }
@@ -265,6 +266,7 @@ void initSoundSystem() {
   }
 
   backgroundRequested = false;
+  soundEnabled = true;
   stopSequence(backgroundPlayer);
   stopSequence(effectPlayer);
   stopNote();
@@ -309,4 +311,22 @@ void playJumpSound() {
 
 void playGameOverSound() {
   startSequence(effectPlayer, gameOverMelody, gameOverMelodyLength, false);
+}
+
+bool isSoundEnabled() {
+  return soundEnabled;
+}
+
+void setSoundEnabled(bool enabled) {
+  soundEnabled = enabled;
+  if (!soundEnabled) {
+    stopNote();
+    return;
+  }
+
+  if (effectPlayer.active) {
+    syncOutputToPlayer(effectPlayer);
+  } else {
+    syncOutputToPlayer(backgroundPlayer);
+  }
 }

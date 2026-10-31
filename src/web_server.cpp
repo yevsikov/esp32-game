@@ -2,6 +2,7 @@
 #include <Preferences.h>
 #include <WebServer.h>
 #include <WiFi.h>
+#include "sounds.h"
 #include "web_server.h"
 #include "web_app.h"
 
@@ -29,8 +30,9 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
         section { margin-top: 2rem; }
                 h2 { margin: 0 0 .75rem; color: var(--olive); font-size: 1rem; font-weight: 500; }
         #history-chart { display: block; width: 100%; height: 230px; margin: .5rem auto 1rem; }
-        #export-csv { margin-top: .75rem; padding: .55rem .85rem; border: 1px solid var(--olive); border-radius: 4px; background: transparent; color: var(--white); font: inherit; cursor: pointer; }
-        #export-csv:disabled { opacity: .5; cursor: default; }
+        .control-button { margin-top: .75rem; padding: .55rem .85rem; border: 1px solid var(--olive); border-radius: 4px; background: transparent; color: var(--white); font: inherit; cursor: pointer; }
+        .control-button:disabled { opacity: .5; cursor: default; }
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
         #history-status { margin-top: .75rem; font-size: .875rem; }
     </style>
 </head>
@@ -43,7 +45,10 @@ const char HELLO_PAGE[] PROGMEM = R"rawliteral(
         <section>
             <h2>Recent games</h2>
             <canvas id="history-chart" role="img" aria-label="Scores over the last games"></canvas>
-            <button id="export-csv" type="button" disabled>Export CSV</button>
+            <div class="controls">
+                <button id="export-csv" class="control-button" type="button" disabled>Export CSV</button>
+                <button id="sound-toggle" class="control-button" type="button" disabled>Sound: Loading...</button>
+            </div>
             <p id="history-status" role="status">Reading game history</p>
         </section>
     </main>
@@ -126,6 +131,15 @@ void startWebServer() {
         server.send(200, "application/json", response);
     });
     server.on("/api/results", HTTP_GET, handleResultsRequest);
+    server.on("/api/sound", HTTP_GET, []() {
+        server.sendHeader("Cache-Control", "no-store");
+        server.send(200, "application/json", isSoundEnabled() ? "{\"enabled\":true}" : "{\"enabled\":false}");
+    });
+    server.on("/api/sound", HTTP_POST, []() {
+        setSoundEnabled(!isSoundEnabled());
+        server.sendHeader("Cache-Control", "no-store");
+        server.send(200, "application/json", isSoundEnabled() ? "{\"enabled\":true}" : "{\"enabled\":false}");
+    });
     server.onNotFound([]() {
         server.send(404, "text/plain; charset=utf-8", "Not found");
     });

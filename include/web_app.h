@@ -7,8 +7,40 @@ const recordOutput = document.getElementById('record');
 const recordStatus = document.getElementById('status');
 const historyStatus = document.getElementById('history-status');
 const exportButton = document.getElementById('export-csv');
+const soundToggle = document.getElementById('sound-toggle');
 const chart = document.getElementById('history-chart');
 let gameScores = [];
+
+function showSoundState(enabled) {
+    soundToggle.textContent = `Sound: ${enabled ? 'On' : 'Off'}`;
+    soundToggle.setAttribute('aria-pressed', String(enabled));
+    soundToggle.disabled = false;
+}
+
+soundToggle.addEventListener('click', () => {
+    soundToggle.disabled = true;
+    fetch('/api/sound', { method: 'POST', cache: 'no-store' })
+        .then(response => {
+            if (!response.ok) throw new Error('Request failed');
+            return response.json();
+        })
+        .then(data => showSoundState(data.enabled))
+        .catch(() => {
+            soundToggle.textContent = 'Sound: unavailable';
+            soundToggle.disabled = false;
+        });
+});
+
+fetch('/api/sound', { cache: 'no-store' })
+    .then(response => {
+        if (!response.ok) throw new Error('Request failed');
+        return response.json();
+    })
+    .then(data => showSoundState(data.enabled))
+    .catch(() => {
+        soundToggle.textContent = 'Sound: unavailable';
+        soundToggle.disabled = false;
+    });
 
 exportButton.addEventListener('click', () => {
     const rows = ['game_number,score'];

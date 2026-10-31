@@ -12,4 +12,6 @@ void stopBackgroundMusic();
 void stopAllSounds();
 void playJumpSound();
 void playGameOverSound();
+bool isSoundEnabled();
+void setSoundEnabled(bool enabled);
 
